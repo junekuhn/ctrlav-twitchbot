@@ -3,14 +3,18 @@
 // let socket;
 // var io = require('socket.io')(8081);
 const osc = require('node-osc');
-const client = new osc.Client('127.0.0.1', 3333);
+const client = new osc.Client('0.0.0.0', 6060);
+
+let OSCmessage = new osc.Message('/ctrl');
+OSCmessage.append("tidalmsg")
+
 const tmi = require('tmi.js');
 
 // Define configuration options
 const opts = {
   identity: {
     username: "botforctrlav",
-    password: "oauth:<insert oauth here>"
+    password: "oauth:4fj6a30erjptmlcxo390rywnhlbjwt"
   },
   channels: [
     "ctrlav"
@@ -48,7 +52,8 @@ function onMessageHandler (target, context, msg, self) {
 if (msg.includes('\"')){
   let firstQuote = msg.indexOf('\"') + 1;
   let secondQuote = msg.lastIndexOf('\"')
-   pattern = msg.substring(firstQuote, secondQuote);
+
+  OSCmessage.append(msg.substring(firstQuote, secondQuote))
 }
   
 if (msg.includes("osc")) {msg = '!osc'};
@@ -77,8 +82,11 @@ if (msg.includes("osc")) {msg = '!osc'};
       break;
     case "!osc":
       client2.say(target, commands.osc);
-      client.send('/oscAddress', pattern, () => {
+      client.send(OSCmessage, () => {
       });
+      //recreate the message
+      OSCmessage = new osc.Message('/ctrl');
+      OSCmessage.append("tidalmsg")
       break;
     default:
       console.log("Not a recognized command");
